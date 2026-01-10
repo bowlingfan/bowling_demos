@@ -1,4 +1,4 @@
-# bowling_demos
+# Demomaking practice
 This is a collection of demos that i've created to try out Graphics Programming using TIC-80 and Python! Started on 12/23/2025 and hoping to build more overtime. I hope you will enjoy some of the visuals I've made here. All are open source _and_ some can be played immediately by downloading the [binary-release](https://github.com/bowlingfan/bowling_demos/releases ) file or testing it online!
 
 link to dev profile in TIC80: https://tic80.com/dev?id=13012
