@@ -8,7 +8,7 @@
 import random
 import math
 
-#2.5
+#offsetted by 2.5 seconds
 class Scene1():
  def __init__(self):
   self.end_t=10.5*sec_t
@@ -18,8 +18,10 @@ class Scene2():
   self.arrow=Arrow()
 class Scene3():
  def __init__(self):
-  self.end_t=25.5*sec_t
-
+  self.end_t=26.5*sec_t
+class Scene4():
+ def __init__(self):
+  self.end_t=42.5*sec_t
 class BranchDrawer():
  def __init__(self,sx=-1,sy=-1,minox=-15,maxox=15,minoy=-30,maxoy=-5,mint=30,maxt=70):
   self.t=0
@@ -138,6 +140,100 @@ class CircleOut():
   self.t=5
  def draw(self):
   circb(self.sx,self.sy,self.t,6)
+class ImproperGrid:
+ def __init__(self):
+  self.grid_size=20
+  self.max_size=4
+  self.cell_pix_size=45
+  self.camera_x=self.cell_pix_size*self.grid_size
+  self.camera_y=self.cell_pix_size*self.grid_size
+  self.grid=[]
+  self.colors=[1,7,8,9]
+  self.spacing=2
+
+  self.init_grid()
+  self.fill_grid()
+
+ def init_grid(self):
+  for _ in range(self.grid_size):
+   row=[]
+   for _ in range(self.grid_size):
+    row.append(-1)
+   self.grid.append(row)
+
+ def fill_grid(self):
+  u_id=1
+  for row_i in range(self.grid_size):
+   for col_i in range(self.grid_size):
+    if self.grid[row_i][col_i] != -1: continue;
+    # account for if the value of the next few are already filled in
+    max_width_size=self.max_size if abs(self.grid_size-1-col_i)>=self.max_size else abs(self.grid_size-1-col_i)
+    max_height_size=self.max_size if abs(self.grid_size-1-row_i)>=self.max_size else abs(self.grid_size-1-row_i)
+    width=random.randint(1,max_width_size) if max_width_size>1 else 1
+    height=random.randint(1,max_height_size) if max_height_size>1 else 1
+    for w in range(width):
+     for h in range(height):
+      self.grid[row_i+h][col_i+w]=u_id
+    u_id+=1
+
+ def draw(self):
+  start_row=int((self.cell_pix_size*self.grid_size)-self.camera_y)//self.cell_pix_size
+  start_col=int((self.cell_pix_size*self.grid_size)-self.camera_x)//self.cell_pix_size
+  horizontal_amt=window_w//self.cell_pix_size+3
+  vertical_amt=window_h//self.cell_pix_size+3
+  by=self.cell_pix_size+self.spacing
+  for row_i in range(start_row,min(start_row+vertical_amt,self.grid_size)):
+   for col_i in range(start_col,min(start_col+horizontal_amt,self.grid_size)):
+    x=self.camera_x-by-((self.grid_size-start_col)*by)+((col_i-start_col)*(by))
+    y=self.camera_y-by-((self.grid_size-start_row)*by)+((row_i-start_row)*(by))
+    n=self.grid[row_i][col_i]
+    rect(int(x),int(y),self.cell_pix_size,self.cell_pix_size,self.colors[n%4])
+class Firework:
+ def __init__(self):
+  self.t=0
+  self.tick_e=0
+  self.orad=3
+  self.ox=random.randint(0,window_w)
+  self.oy=window_h+self.orad
+  self.ey=random.randint(0,window_h-36)
+  self.ocolor=random.randint(11,12)
+  self.et_di=abs(self.ey-self.oy) #endtick
+ def update_t(self):
+  self.t+=1
+ def draw(self):
+  self.draw_initial()
+ def draw_initial(self):
+  if self.t/self.et_di<0.6:
+   circ(self.ox,self.oy-int(self.et_di*quint_out(self.t,self.et_di)),self.orad,self.ocolor)
+  else:
+   self.draw_final()
+ def draw_final(self):
+  raise BaseException("must implement or error.")
+class Firework_COut(Firework):
+ def __init__(self):
+  super().__init__()
+  self.end_tick=100
+ def draw_final(self):
+  circb(self.ox,self.oy-self.et_di,int(self.orad+50*quint_out(self.tick_e,self.end_tick)),self.ocolor)
+  self.tick_e+=1
+class Firework_CSpreadOut(Firework):
+ def __init__(self):
+  super().__init__()
+  self.end_tick=100
+  self.amt=random.randint(3,10)
+  self.endpos=[]
+  self.rad=2
+  self.fill_endpos()
+ def fill_endpos(self):
+  for _ in range(self.amt):
+   self.endpos.append((self.ox+random.randint(-30,30),self.oy-self.et_di+random.randint(-30,30)))
+ def draw_final(self):
+  for pos in self.endpos:
+   m=(pos[1]-(self.oy-self.et_di))/(pos[0]-self.ox)
+   x=(pos[0]-self.ox)*quint_out(self.tick_e,self.end_tick)
+   y=m*x
+   circ(self.ox+int(x),(self.oy-self.et_di)-int(y),self.rad,self.ocolor)
+  self.tick_e+=2
 
 # main vars
 t=0
@@ -147,10 +243,14 @@ sec_t=60
 scene1_d=Scene1()
 scene2_d=Scene2()
 scene3_d=Scene3()
+scene4_d=Scene4()
 branches=[]
 lines=[]
 c_outs=[]
-
+grid=ImproperGrid()
+fireworks=[]
+fireworks_valid=[Firework_COut,Firework_CSpreadOut]
+# UTIL
 def msg_cen(txt,offy=0,c=2):
  w=print(txt,0,-6)
  print(txt,window_w//2-w//2,window_h//2+offy,c)
@@ -162,6 +262,8 @@ def wavy_cen_text(txt):
   print(l,x,window_h//2+int(7*math.sin((t+l_i)/5.5)),13+(t//5+l_i)%3,False)
   x += w
   l_i+=1
+
+#SCENES
 def scene_1():
  cls(0)
 
@@ -178,7 +280,6 @@ def scene_1():
  if t>8.25*sec_t:
   msg_cen("ready?",2,0)
   msg_cen("ready?")
-
 def scene_2():
  cls(3)
 
@@ -200,10 +301,79 @@ def scene_2():
   wavy_cen_text("in 2026!")
  else:
   wavy_cen_text("happy birthday")
-
 def scene_3():
  cls(0)
- 
+
+ grid.camera_x-=abs(1.5*math.sin(t/30))
+ grid.camera_y-=abs(math.cos(t/60))
+ grid.draw()
+
+ if t>24.5*sec_t:
+  wavy_cen_text("now enjoy the rest")
+ elif t>22.5*sec_t:
+  wavy_cen_text("i'll give you the spirit")
+ elif t>20.5*sec_t:
+  wavy_cen_text("and your growth")
+ else:
+  wavy_cen_text("cheers to wisdom")
+
+def quint_out(t,et):
+ return 1-(1-t/et)**5
+def cubic_out(t):
+ return 1-math.pow(1-(t/7),3)
+def particles():
+ spacing=50
+ add=2.5
+ y_move=spacing//2
+ amt=100
+ st=t*(11/200)
+ y_o_t=max(window_h-window_h*cubic_out(st),0)*2
+ for o in range(amt):
+  x=math.sin(o+st)
+  y=o+y_move*math.sin(st/3.5)
+  pix(120+int(33*x),int(((window_h+spacing)//amt+add)*y)-spacing*2+int(y_o_t),1)
+def hplus():
+ st=t*(11/200)
+ size=5 #even
+ y=110
+ for x in range(-1,11):
+  xc=x*24+int(st*3)%25
+  rxs=size*math.cos(st)
+  rys=size*math.sin(st)
+  line(rxs+xc,y+rys,-rxs+xc,y-rys,1)
+  line(rys+xc,y-rxs,-rys+xc,y+rxs,1)
+def vplus():
+ st=t*(11/200)
+ size=5 #even
+ x=25
+ for y in range(-1,7):
+  yc=y*24+int(st*3)%25+12
+  rxs=size*math.cos(st)
+  rys=size*math.sin(st)
+  line(x+rxs,yc+rys,x-rxs,yc-rys,1)
+  line(x+rys,yc-rxs,x-rys,yc+rxs,1)
+def fireworks_play():
+ if t%30==0:
+  fireworks.append(random.choice(fireworks_valid)())
+ for firework in fireworks:
+  firework.update_t()
+  firework.draw()
+  if firework.tick_e/firework.end_tick>0.75 and firework in fireworks:
+   fireworks.remove(firework)
+def scene_4():
+ cls(10)
+ #msg_cen("dream big.",0,13)
+ particles()
+ circ(window_w//2,window_h+25,78+int(7*math.cos(t*(11/700))),6)
+ hplus()
+ vplus()
+ fireworks_play()
+ if t>41:
+  msg_cen("i hope the visual's nicer.", 0, 14)
+ elif t>39.5:
+  msg_cen("happy birthday again.", 0, 15)
+
+# MAIN METHOD/RUNNER
 def TIC():
  global t
  t+=1
@@ -215,3 +385,5 @@ def TIC():
   scene_2()
  elif t<scene3_d.end_t:
   scene_3()
+ elif t<scene4_d.end_t:
+  scene_4()
