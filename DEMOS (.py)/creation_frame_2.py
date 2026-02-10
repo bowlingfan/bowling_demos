@@ -1,7 +1,7 @@
 # title:   happy birthday gift
-# author:  g scape
+# author:  someone unusual
 # desc:    happy birthday demo for friend, no music.
-# site:    website link
+# site:    extremities.neocities.org
 # license: MIT License (change this to your license of choice)
 # version: 0.1
 # script:  python
@@ -21,7 +21,7 @@ class Scene3():
   self.end_t=26.5*sec_t
 class Scene4():
  def __init__(self):
-  self.end_t=42.5*sec_t
+  self.end_t=43*sec_t
 class BranchDrawer():
  def __init__(self,sx=-1,sy=-1,minox=-15,maxox=15,minoy=-30,maxoy=-5,mint=30,maxt=70):
   self.t=0
@@ -272,7 +272,7 @@ def scene_1():
   branches.append(BranchDrawer())
   branches.append(BranchDrawer())
  if t==sec_t*3:
-  branches.append(BranchDrawer(0,22,0,25,-17,6,20,45))
+  branches.append(BranchDrawer(0,22,0,25,-6,17,20,45))
   branches.append(BranchDrawer(241,88,-20,0,-10,10,15,50))
  for branch in branches:
   branch.t += 1
@@ -287,7 +287,7 @@ def scene_2():
   scene2_d.arrow = Arrow()
  if t%(sec_t)==0:
   lines.append(StraightLineDrawer())
- if t>15.8*sec_t and t%25==0:
+ if t>16.15*sec_t and t%25==0:
   c_outs.append(CircleOut())
  scene2_d.arrow.t += (7-scene2_d.arrow.t*0.03) 
  scene2_d.arrow.draw()
@@ -326,7 +326,7 @@ def particles():
  add=2.5
  y_move=spacing//2
  amt=100
- st=t*(11/200)
+ st=(t-(26.5*sec_t))*(11/200)
  y_o_t=max(window_h-window_h*cubic_out(st),0)*2
  for o in range(amt):
   x=math.sin(o+st)
@@ -353,7 +353,7 @@ def vplus():
   line(x+rxs,yc+rys,x-rxs,yc-rys,1)
   line(x+rys,yc-rxs,x-rys,yc+rxs,1)
 def fireworks_play():
- if t%30==0:
+ if t%15==0:
   fireworks.append(random.choice(fireworks_valid)())
  for firework in fireworks:
   firework.update_t()
@@ -362,17 +362,17 @@ def fireworks_play():
    fireworks.remove(firework)
 def scene_4():
  cls(10)
- #msg_cen("dream big.",0,13)
  particles()
  circ(window_w//2,window_h+25,78+int(7*math.cos(t*(11/700))),6)
  hplus()
  vplus()
  fireworks_play()
- if t>41:
-  msg_cen("i hope the visual's nicer.", 0, 14)
- elif t>39.5:
+ if t>39*sec_t:
+  msg_cen("i hope the visual's nice.", 0, 13)
+ elif t>35.5*sec_t:
   msg_cen("happy birthday again.", 0, 15)
-
+ if t>41.5*sec_t:
+  circ(window_w//2,window_h//2,int((t)-41.5*sec_t)*2,0)
 # MAIN METHOD/RUNNER
 def TIC():
  global t
@@ -387,3 +387,8 @@ def TIC():
   scene_3()
  elif t<scene4_d.end_t:
   scene_4()
+ else:
+  cls(0)
+  msg_cen("creation frame #2",0,1)
+  msg_cen("Birthday",10,1)
+  msg_cen("(reload/rerun cartridge to replay.)",50,2)
